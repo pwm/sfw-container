@@ -3,6 +3,12 @@
     "type": "library",
     "description": "Simple Container for JSON APIs",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Zsolt Szende",
+            "email": "szendezs@gmail.com"
+        }
+    ],
     "require": {
         "php": ">=7.1.0"
     },
