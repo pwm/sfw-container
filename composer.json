@@ -1,7 +1,7 @@
 {
     "name": "pwm/sfw-container",
     "type": "library",
-    "description": "Simple Container class for JSON APIs",
+    "description": "Simple Container for JSON APIs",
     "license": "MIT",
     "require": {
         "php": ">=7.1.0"
