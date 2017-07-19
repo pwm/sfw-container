@@ -2,7 +2,7 @@
     "name": "pwm/sfw-container",
     "description": "Simple Container for JSON APIs",
     "type": "library",
-    "keywords": [],
+    "keywords": ["sfw", "container", "dependency-injection"],
     "homepage": "https://github.com/pwm/sfw-container",
     "license": "MIT",
     "authors": [
