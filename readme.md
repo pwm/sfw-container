@@ -1,6 +1,8 @@
 # SFW Container
 
-A simple Container that ensures a cycle free dependency graph.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A simple Container that ensures a cycle-free dependency graph.
 
 ## Requirements
 
@@ -40,3 +42,17 @@ $a = $container->resolve(A::class);
 $b = $container->resolve(B::class);
 $c = $container->resolve(C::class);
 ```
+
+## How it works
+
+TBD
+
+## Tests
+
+	$ vendor/bin/phpunit
+	$ composer phpcs
+	$ composer phpstan
+
+## Changelog
+
+[Click here](changelog.md)

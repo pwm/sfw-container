@@ -1,13 +1,10 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SFW\Container;
 
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group container
- */
 class ContainerTest extends TestCase
 {
     /** @var Container */
@@ -21,7 +18,7 @@ class ContainerTest extends TestCase
     /**
      * @test
      */
-    public function itResolves(): void
+    public function it_resolves_a_class_instance(): void
     {
         $this->container->add(Test::class, function () { return new Test(); });
         static::assertInstanceOf(Test::class, $this->container->resolve(Test::class));
@@ -30,18 +27,21 @@ class ContainerTest extends TestCase
     /**
      * @test
      */
-    public function itResolvesFromCache(): void
+    public function it_can_resolve_from_cache_or_create_a_new_instance(): void
     {
-        $this->container->add(CounterTest::class, function () {
+        $this->container->add('cacheTest', function () {
             static $counter = 0;
-            return new CounterTest(++$counter);
+            return new class(++$counter) {
+                private $counter;
+                public function __construct(int $counter) { $this->counter = $counter; }
+                public function getCounter(): int { return $this->counter; }
+            };
         });
 
-        // object was resolved => counter increments
-        static::assertSame(1, $this->container->resolve(CounterTest::class)->getCounter());
-
-        // object was served from the container cache => counter does not increment
-        static::assertSame(1, $this->container->resolve(CounterTest::class)->getCounter());
+        static::assertSame(1, $this->container->resolve('cacheTest')->getCounter());
+        static::assertSame(2, $this->container->resolve('cacheTest')->getCounter());
+        static::assertSame(3, $this->container->resolve('cacheTest')->getCounter());
+        static::assertSame(1, $this->container->resolveFromCache('cacheTest')->getCounter());
     }
 
     /**
@@ -49,10 +49,10 @@ class ContainerTest extends TestCase
      * @expectedException \RuntimeException
      * @expectedExceptionMessageRegExp 'Cannot override resolver for key: .*'
      */
-    public function itThrowsWhenOverridingResolverKey(): void
+    public function it_throws_upon_overriding_a_resolver_key(): void
     {
-        $this->container->add(Foo1::class, function () { return new Foo1(); });
-        $this->container->add(Foo1::class, function () { return new Foo2(); });
+        $this->container->add('key', function () { return new class {}; });
+        $this->container->add('key', function () { return new class {}; });
     }
 
     /**
@@ -60,22 +60,10 @@ class ContainerTest extends TestCase
      * @expectedException \RuntimeException
      * @expectedExceptionMessage No resolver found for key: foobar
      */
-    public function itThrowsWhenNoResolverKeyFound(): void
+    public function it_throws_when_no_resolver_key_found(): void
     {
         $this->container->resolve('foobar');
     }
 }
 
-// test data for itResolves
 class Test {}
-
-// test data for itResolvesFromCache
-class CounterTest {
-    private $counter = 0;
-    public function __construct(int $counter) { $this->counter += $counter; }
-    public function getCounter(): int { return $this->counter; }
-}
-
-// test data for itThrowsWhenOverridingResolverKey
-class Foo1 {}
-class Foo2 {}

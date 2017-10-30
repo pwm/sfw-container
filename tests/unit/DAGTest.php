@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SFW\Container;
 
@@ -7,8 +7,6 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Scenarios for testing that the container resolves dependencies if its dependency graph is acyclic
- *
- * @group container
  */
 class DAGTest extends TestCase
 {

@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SFW\Container;
 
@@ -8,8 +8,6 @@ use RuntimeException;
 
 /**
  * Scenarios for testing that the container detects cycles in its dependency graph
- *
- * @group container
  */
 class DCGTest extends TestCase
 {

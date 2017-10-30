@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SFW\Container;
 
@@ -14,9 +14,6 @@ class Container
     /** @var array */
     private $cache = [];
 
-    /** @var array */
-    private $traversedPathStack = [];
-
     public function add(string $key, Closure $resolver): void
     {
         if (array_key_exists($key, $this->resolvers)) {
@@ -27,23 +24,37 @@ class Container
 
     public function resolve(string $key)
     {
-        if (array_key_exists($key, $this->cache)) {
-            return $this->cache[$key];
-        }
-
         if (! array_key_exists($key, $this->resolvers)) {
             throw new RuntimeException(sprintf('No resolver found for key: %s', $key));
         }
 
-        if (isset($this->traversedPathStack[$key])) {
-            $cycle = array_merge(array_keys($this->traversedPathStack), [$key]);
+        return $this->_resolve($key);
+    }
+
+    //@todo: addCached would be better
+    public function resolveFromCache(string $key)
+    {
+        return array_key_exists($key, $this->cache)
+            ? $this->cache[$key]
+            : $this->resolve($key);
+    }
+
+    private function _resolve(string $key)
+    {
+        static $traversedPathStack = [];
+
+        if (isset($traversedPathStack[$key])) {
+            $cycle = array_merge(array_keys($traversedPathStack), [$key]);
             throw new RuntimeException(sprintf('Circular dependency detected: %s', implode(' -> ', $cycle)));
         }
 
-        $this->traversedPathStack[$key] = true;
-        $this->cache[$key] = $this->resolvers[$key]();
-        array_pop($this->traversedPathStack);
+        $traversedPathStack[$key] = true;
+        $resolved = $this->resolvers[$key]();
+        if (! array_key_exists($key, $this->cache)) {
+            $this->cache[$key] = $resolved;
+        }
+        array_pop($traversedPathStack);
 
-        return $this->cache[$key];
+        return $resolved;
     }
 }
