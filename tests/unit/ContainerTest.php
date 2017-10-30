@@ -21,7 +21,7 @@ class ContainerTest extends TestCase
     public function it_resolves_a_class_instance(): void
     {
         $this->container->add(Test::class, function () { return new Test(); });
-        static::assertInstanceOf(Test::class, $this->container->resolve(Test::class));
+        self::assertInstanceOf(Test::class, $this->container->resolve(Test::class));
     }
 
     /**
@@ -38,10 +38,10 @@ class ContainerTest extends TestCase
             };
         });
 
-        static::assertSame(1, $this->container->resolve('cacheTest')->getCounter());
-        static::assertSame(2, $this->container->resolve('cacheTest')->getCounter());
-        static::assertSame(3, $this->container->resolve('cacheTest')->getCounter());
-        static::assertSame(1, $this->container->resolveFromCache('cacheTest')->getCounter());
+        self::assertSame(1, $this->container->resolve('cacheTest')->getCounter());
+        self::assertSame(2, $this->container->resolve('cacheTest')->getCounter());
+        self::assertSame(3, $this->container->resolve('cacheTest')->getCounter());
+        self::assertSame(1, $this->container->resolveFromCache('cacheTest')->getCounter());
     }
 
     /**

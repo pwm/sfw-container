@@ -69,7 +69,7 @@ class DCGTest extends TestCase
         $this->itDetectsCycleFromKey(C4C1::class, 'C4C1 -> C4C3 -> C4C4 -> C4C5 -> C4C3');
 
         // a sink can be resolved even in a cyclic graph
-        static::assertInstanceOf(C4C2::class, $this->container->resolve(C4C2::class));
+        self::assertInstanceOf(C4C2::class, $this->container->resolve(C4C2::class));
     }
 
     private function itDetectsCycleFromKey(string $key, string $expectedCycle): void
@@ -77,7 +77,7 @@ class DCGTest extends TestCase
         try {
             $this->container->resolve($key);
         } catch (RuntimeException $e) {
-            static::assertStringEndsWith($expectedCycle, str_replace('SFW\Container\\', '', $e->getMessage()));
+            self::assertStringEndsWith($expectedCycle, str_replace('SFW\Container\\', '', $e->getMessage()));
         }
     }
 }

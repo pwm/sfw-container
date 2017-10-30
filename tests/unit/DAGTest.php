@@ -25,7 +25,7 @@ class DAGTest extends TestCase
     {
         $this->container->add(A1C1::class, function () { return new A1C1(); });
 
-        static::assertInstanceOf(A1C1::class, $this->container->resolve(A1C1::class));
+        self::assertInstanceOf(A1C1::class, $this->container->resolve(A1C1::class));
     }
 
     /**
@@ -36,7 +36,7 @@ class DAGTest extends TestCase
         $this->container->add(A2C1::class, function () { return new A2C1($this->resolve(A2C2::class)); });
         $this->container->add(A2C2::class, function () { return new A2C2(); });
 
-        static::assertInstanceOf(A2C1::class, $this->container->resolve(A2C1::class));
+        self::assertInstanceOf(A2C1::class, $this->container->resolve(A2C1::class));
     }
 
     /**
@@ -48,7 +48,7 @@ class DAGTest extends TestCase
         $this->container->add(A3C2::class, function () { return new A3C2($this->resolve(A3C3::class)); });
         $this->container->add(A3C3::class, function () { return new A3C3(); });
 
-        static::assertInstanceOf(A3C1::class, $this->container->resolve(A3C1::class));
+        self::assertInstanceOf(A3C1::class, $this->container->resolve(A3C1::class));
     }
 
     /**
@@ -60,7 +60,7 @@ class DAGTest extends TestCase
         $this->container->add(A4C2::class, function () { return new A4C2(); });
         $this->container->add(A4C3::class, function () { return new A4C3(); });
 
-        static::assertInstanceOf(A4C1::class, $this->container->resolve(A4C1::class));
+        self::assertInstanceOf(A4C1::class, $this->container->resolve(A4C1::class));
     }
 
     /**
@@ -72,7 +72,7 @@ class DAGTest extends TestCase
         $this->container->add(A5C2::class, function () { return new A5C2($this->resolve(A5C3::class)); });
         $this->container->add(A5C3::class, function () { return new A5C3(); });
 
-        static::assertInstanceOf(A5C1::class, $this->container->resolve(A5C1::class));
+        self::assertInstanceOf(A5C1::class, $this->container->resolve(A5C1::class));
     }
 
     /**
@@ -85,7 +85,7 @@ class DAGTest extends TestCase
         $this->container->add(A6C3::class, function () { return new A6C3($this->resolve(A6C4::class)); });
         $this->container->add(A6C4::class, function () { return new A6C4(); });
 
-        static::assertInstanceOf(A6C1::class, $this->container->resolve(A6C1::class));
+        self::assertInstanceOf(A6C1::class, $this->container->resolve(A6C1::class));
     }
 
     /**
@@ -98,7 +98,7 @@ class DAGTest extends TestCase
         $this->container->add(A7C3::class, function () { return new A7C3($this->resolve(A7C4::class)); });
         $this->container->add(A7C4::class, function () { return new A7C4(); });
 
-        static::assertInstanceOf(A7C1::class, $this->container->resolve(A7C1::class));
+        self::assertInstanceOf(A7C1::class, $this->container->resolve(A7C1::class));
     }
 }
 
