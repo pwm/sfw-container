@@ -7,6 +7,15 @@
 
 A simple Container that ensures a cycle-free dependency graph.
 
+## Table of Contents
+
+* [Requirements](#requirements)
+* [Installation](#installation)
+* [Usage](#usage)
+* [How it works](#how-it-works)
+* [Tests](#tests)
+* [Changelog](#changelog)
+
 ## Requirements
 
 PHP 7.1+
