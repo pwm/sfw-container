@@ -15,6 +15,7 @@ A simple Container that ensures a cycle-free dependency graph.
 * [How it works](#how-it-works)
 * [Tests](#tests)
 * [Changelog](#changelog)
+* [Licence](#licence)
 
 ## Requirements
 
@@ -68,3 +69,7 @@ TBD
 ## Changelog
 
 [Click here](changelog.md)
+
+## Licence
+
+[MIT](LICENSE)
