@@ -27,17 +27,17 @@ class Container
 
     public function add(string $key, Closure $resolver): void
     {
+        $this->factory($key, $resolver);
+        $this->cacheMe[$key] = self::CACHE_ME;
+    }
+
+    public function factory(string $key, Closure $resolver): void
+    {
         if (isset($this->resolvers[$key])) {
             throw new DuplicateKey(sprintf('Cannot override resolver for key: %s', $key));
         }
         // Bind the resolver to the container instance so we can use $this->resolve() from within it
         $this->resolvers[$key] = $resolver->bindTo($this);
-    }
-
-    public function addCached(string $key, Closure $resolver): void
-    {
-        $this->add($key, $resolver);
-        $this->cacheMe[$key] = self::CACHE_ME;
     }
 
     public function resolve(string $key)

@@ -66,7 +66,7 @@ assert($c->resolve(B::class) instanceof B);
 assert($c->resolve(C::class) instanceof C);
 ```
 
-Caching dependencies:
+Factory vs. cached instances:
 
 ```php
 // Simple class that saves a timestamp
@@ -83,26 +83,26 @@ class TS {
 
 $c = new Container();
 
-// Add our TS class both as normal and as cached
+// Add our TS class both cached and as a factory
 $c->add('nTS', function (): TS {
     return new TS(time());
 });
-$c->addCached('cTS', function (): TS {
+$c->factory('fTS', function (): TS {
     return new TS(time());
 });
 
 // Get an instance for both
-$nTS = $c->resolve('nTS'); // instantiate
-$cTS = $c->resolve('cTS'); // instantiate and cache
+$nTS = $c->resolve('nTS'); // instantiate and cache
+$fTS = $c->resolve('fTS'); // just instantiate
 
 // Wait a sec ...
 sleep(1);
 
-// Normal gets instantiated again, hence timestamps will differ
-assert($nTS->getTimestamp() !== $c->resolve('nTS')->getTimestamp());
+// Normal is cached, hence timestamps will match
+assert($nTS->getTimestamp() === $c->resolve('nTS')->getTimestamp());
 
-// Cached is not instantiated again, hence timestamps will match
-assert($cTS->getTimestamp() === $c->resolve('cTS')->getTimestamp());
+// Factory instantiates again, hence timestamps will differ
+assert($fTS->getTimestamp() !== $c->resolve('fTS')->getTimestamp());
 ```
 
 Cycle detection:
@@ -133,11 +133,11 @@ try {
 
 Adding an instance to the container requires a key that is unique and a resolver function that, upon execution, returns the instance.
 
-All resolvers are bound to the container which means that `$this` points to the container from within resolvers. This makes it possible to resolve from within resolvers using `$this->resolve()`.
+Resolvers are bound to the container which means that `$this` points to the container from within. This makes it possible to resolve inside resolvers using `$this->resolve()`.
 
-Resolving means executing the resolver function to instantiate a class. This process is recursive as classes may have other classes as dependencies. If the container encounters a cycle while traversing the dependency graph it stops the resolution process. This ensures that only acyclic graphs (DAGs) are handled.
+Resolving means executing the resolver function to instantiate a class. This process is recursive as classes may have other classes as dependencies. If the container encounters a cycle while traversing the dependency graph it stops the resolution process. This ensures that only acyclic dependency graphs (ie. DAGs) are handled.
 
-If a resolver was added via the `addCached()` method then, upon successful resolution, the instance is cached meaning that any subsequent resolution will return the same instance.
+The container caches instantiates by default meaning that any subsequent resolution will return the same instance. If a resolver was added via the `factory()` method then every resolution will return a new instance.
 
 ## Tests
 

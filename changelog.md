@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [2.0.0] - 2018-06-15
 ### Changed
-  * Cacheability is now decided at creation instead of instantiation. To support this `resolveFromCache()` is removed and `addCached()` is added to the public interface
+  * Cacheability is now decided at creation instead of instantiation. To support this `resolveFromCache()` is removed, `add()` is now caching by default and `factory()` resolves a new instance every time.
 
 ### Added
   * Specific exception types

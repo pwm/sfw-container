@@ -18,7 +18,7 @@ class ContainerTest extends TestCase
     /**
      * @test
      */
-    public function it_resolves_a_member(): void
+    public function it_resolves_an_instance(): void
     {
         $c = new Container();
 
@@ -30,7 +30,7 @@ class ContainerTest extends TestCase
     /**
      * @test
      */
-    public function it_resolves_a_member_from_cache(): void
+    public function it_can_instantiate_via_a_factory(): void
     {
         $c = new Container();
 
@@ -44,16 +44,16 @@ class ContainerTest extends TestCase
             };
         };
 
-        $c->add('newEveryTime', $instanceCounter);
-        $c->addCached('cached', $instanceCounter);
+        $c->add('cached', $instanceCounter);
+        $c->factory('newEveryTime', $instanceCounter);
+
+        self::assertSame(1, $c->resolve('cached')->getCount());
+        self::assertSame(1, $c->resolve('cached')->getCount());
+        self::assertSame(1, $c->resolve('cached')->getCount());
 
         self::assertSame(1, $c->resolve('newEveryTime')->getCount());
         self::assertSame(2, $c->resolve('newEveryTime')->getCount());
         self::assertSame(3, $c->resolve('newEveryTime')->getCount());
-
-        self::assertSame(1, $c->resolve('cached')->getCount());
-        self::assertSame(1, $c->resolve('cached')->getCount());
-        self::assertSame(1, $c->resolve('cached')->getCount());
     }
 
     /**
