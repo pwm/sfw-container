@@ -7,62 +7,74 @@ use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase
 {
-    /** @var Container */
-    private $container;
-
-    public function setUp(): void
+    /**
+     * @test
+     */
+    public function it_creates(): void
     {
-        $this->container = new Container();
+        self::assertInstanceOf(Container::class, new Container());
     }
 
     /**
      * @test
      */
-    public function it_resolves_a_class_instance(): void
+    public function it_resolves_a_member(): void
     {
-        $this->container->add(Test::class, function () { return new Test(); });
-        self::assertInstanceOf(Test::class, $this->container->resolve(Test::class));
+        $c = new Container();
+
+        $c->add(Test::class, function () { return new Test(); });
+
+        self::assertInstanceOf(Test::class, $c->resolve(Test::class));
     }
 
     /**
      * @test
      */
-    public function it_can_resolve_from_cache_or_create_a_new_instance(): void
+    public function it_resolves_a_member_from_cache(): void
     {
-        $this->container->add('cacheTest', function () {
-            static $counter = 0;
-            return new class(++$counter) {
-                private $counter;
-                public function __construct(int $counter) { $this->counter = $counter; }
-                public function getCounter(): int { return $this->counter; }
+        $c = new Container();
+
+        $instanceCounter = function () {
+            static $count = 0;
+            return new class(++$count)
+            {
+                private $count;
+                public function __construct(int $count) { $this->count = $count; }
+                public function getCount(): int { return $this->count; }
             };
-        });
+        };
 
-        self::assertSame(1, $this->container->resolve('cacheTest')->getCounter());
-        self::assertSame(2, $this->container->resolve('cacheTest')->getCounter());
-        self::assertSame(3, $this->container->resolve('cacheTest')->getCounter());
-        self::assertSame(1, $this->container->resolveFromCache('cacheTest')->getCounter());
+        $c->add('newEveryTime', $instanceCounter);
+        $c->addCached('cached', $instanceCounter);
+
+        self::assertSame(1, $c->resolve('newEveryTime')->getCount());
+        self::assertSame(2, $c->resolve('newEveryTime')->getCount());
+        self::assertSame(3, $c->resolve('newEveryTime')->getCount());
+
+        self::assertSame(1, $c->resolve('cached')->getCount());
+        self::assertSame(1, $c->resolve('cached')->getCount());
+        self::assertSame(1, $c->resolve('cached')->getCount());
     }
 
     /**
      * @test
-     * @expectedException \RuntimeException
-     * @expectedExceptionMessageRegExp 'Cannot override resolver for key: .*'
+     * @expectedException \SFW\Container\Exception\DuplicateKey
      */
-    public function it_throws_upon_overriding_a_resolver_key(): void
+    public function it_throws_on_duplicate_resolver_keys(): void
     {
-        $this->container->add('key', function () { return new class {}; });
-        $this->container->add('key', function () { return new class {}; });
+        $c = new Container();
+
+        $c->add('key', function () { });
+        $c->add('key', function () { });
     }
 
     /**
      * @test
-     * @expectedException \RuntimeException
-     * @expectedExceptionMessage No resolver found for key: foobar
+     * @expectedException \SFW\Container\Exception\MissingResolver
      */
     public function it_throws_when_no_resolver_key_found(): void
     {
-        $this->container->resolve('foobar');
+        (new Container())->resolve('missing');
     }
 }
 
