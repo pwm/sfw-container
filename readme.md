@@ -6,7 +6,7 @@
 [![Test Coverage](https://api.codeclimate.com/v1/badges/e9df833499b7885e0f21/test_coverage)](https://codeclimate.com/github/pwm/sfw-container/test_coverage)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A simple Container that ensures a cycle-free dependency graph.
+A minimalistic DI container with cycle detection and cacheable instance resolution. 
 
 ## Table of Contents
 
@@ -21,8 +21,11 @@ A simple Container that ensures a cycle-free dependency graph.
 
 ## Why
 
-To create a minimalistic DI container with cycle detection and cacheable instance resolution. 
+There are many DI containers out there. My design goals were:
 
+- Minimalism
+- Cycle detection in the dependency graph
+- Instance caching by default
 
 ## Requirements
 
