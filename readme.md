@@ -26,6 +26,7 @@ There are many DI containers out there. My design goals were:
 - Minimalism
 - Cycle detection in the dependency graph
 - Instance caching by default
+- Dynamic loading
 
 ## Requirements
 
@@ -49,13 +50,15 @@ class C { public function __construct(string $s) {} }
 $c = new Container();
 
 // Add dependencies to the container
-// Resolving from within resolvers is easy as seen below with class A
+// Resolving from within resolvers is easy as $this is bound to the resolver as seen below
+// Alternatively you can also do closure style "use ($c)", "$c->resolve(...)"
 $c->add(A::class, function (): A {
     return new A(
         $this->resolve(B::class),
         $this->resolve(C::class)
     );
 });
+// 
 $c->add(B::class, function (): B {
     return new B(1234);
 });
@@ -130,6 +133,52 @@ try {
     // prints "Circular dependency detected: X -> Y -> X"
     echo $e->getMessage();
 }
+```
+
+Dynamic loading:
+
+```php
+interface Strategy {
+    public function run(): void;
+}
+class StrategyA implements Strategy {
+    public function run(): void {
+        echo "I'm A";
+    }
+}
+class StrategyB implements Strategy {
+    public function run(): void {
+        echo "I'm B";
+    }
+}
+
+$c = new Container();
+
+$c->add(StrategyA::class, function (): StrategyA {
+    return new StrategyA();
+});
+
+$c->add(StrategyB::class, function (): StrategyB {
+    return new StrategyB();
+});
+
+// This has to be a factory otherwise Strategy will be bound to whatever it first resolves to
+$c->factory(Strategy::class, function (string $strategy) use ($c): Strategy {
+    switch ($strategy) {
+        case 'A':
+            return $c->resolve(StrategyA::class);
+        case 'B':
+            return $c->resolve(StrategyB::class);
+        default:
+            throw new RuntimeException(sprintf('No strategy found for %s', $strategy));
+    }
+});
+
+echo $c->resolve(Strategy::class, 'A')->run(); // "I'm A"
+echo $c->resolve(Strategy::class, 'B')->run(); // "I'm B"
+
+// RuntimeException: No strategy found for C
+$c->resolve(Strategy::class, 'C')->run();
 ```
 
 ## How it works

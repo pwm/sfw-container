@@ -40,7 +40,7 @@ class Container
         $this->resolvers[$key] = $resolver->bindTo($this);
     }
 
-    public function resolve(string $key)
+    public function resolve(string $key, ...$resolverParams)
     {
         if (isset($this->cache[$key])) {
             return $this->cache[$key];
@@ -50,14 +50,14 @@ class Container
             throw new MissingResolver(sprintf('No resolver found for key: %s', $key));
         }
 
-        $resolved = $this->_resolve($key);
+        $resolved = $this->_resolve($key, ...$resolverParams);
         if (isset($this->cacheMe[$key])) {
             $this->cache[$key] = $resolved;
         }
         return $resolved;
     }
 
-    private function _resolve(string $key)
+    private function _resolve(string $key, ...$resolverParams)
     {
         // Keeping track of our path in the dependency graph during recursive calls, so we can detect cycles
         static $traversedPathStack = [];
@@ -68,7 +68,7 @@ class Container
         }
 
         $traversedPathStack[$key] = self::TRAVERSED;
-        $resolved = $this->resolvers[$key]();
+        $resolved = $this->resolvers[$key](...$resolverParams);
         array_pop($traversedPathStack);
 
         return $resolved;

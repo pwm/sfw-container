@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace SFW\Container;
 
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 class ContainerTest extends TestCase
 {
@@ -22,7 +23,7 @@ class ContainerTest extends TestCase
     {
         $c = new Container();
 
-        $c->add(Test::class, function () { return new Test(); });
+        $c->add(Test::class, function (): Test { return new Test(); });
 
         self::assertInstanceOf(Test::class, $c->resolve(Test::class));
     }
@@ -58,6 +59,37 @@ class ContainerTest extends TestCase
 
     /**
      * @test
+     */
+    public function it_dynamically_resolves_parametrised_resolvers(): void
+    {
+        $c = new Container();
+
+        $c->add(StrategyA::class, function (): StrategyA {
+            return new StrategyA();
+        });
+
+        $c->add(StrategyB::class, function (): StrategyB {
+            return new StrategyB();
+        });
+
+        // Note that this has to be a factory otherwise Strategy will be bound to whatever it 1st resolves to
+        $c->factory(Strategy::class, function (string $strategy) use ($c): Strategy {
+            switch ($strategy) {
+                case 'A':
+                    return $c->resolve(StrategyA::class);
+                case 'B':
+                    return $c->resolve(StrategyB::class);
+                default:
+                    throw new RuntimeException(sprintf('No strategy found for %s', $strategy));
+            }
+        });
+
+        self::assertInstanceOf(StrategyA::class, $c->resolve(Strategy::class, 'A'));
+        self::assertInstanceOf(StrategyB::class, $c->resolve(Strategy::class, 'B'));
+    }
+
+    /**
+     * @test
      * @expectedException \SFW\Container\Exception\DuplicateKey
      */
     public function it_throws_on_duplicate_resolver_keys(): void
@@ -78,4 +110,18 @@ class ContainerTest extends TestCase
     }
 }
 
-class Test {}
+class Test
+{
+}
+
+interface Strategy
+{
+}
+
+class StrategyA implements Strategy
+{
+}
+
+class StrategyB implements Strategy
+{
+}
