@@ -72,6 +72,29 @@ assert($c->resolve(B::class) instanceof B);
 assert($c->resolve(C::class) instanceof C);
 ```
 
+Cycle detection:
+
+```php
+// X depends on Y and Y depends on X ...
+class X { public function __construct(Y $y) {} }
+class Y { public function __construct(X $x) {} }
+
+$c = new Container();
+
+$c->add(X::class, function (): X {
+    return new X($this->resolve(Y::class));
+});
+$c->add(Y::class, function (): Y {
+    return new Y($this->resolve(X::class));
+});
+
+try {
+    $c->resolve(X::class);
+} catch (CycleDetected $e) {
+    assert('X -> Y -> X' === $e->getMessage());
+}
+```
+
 Factory vs. cached instances:
 
 ```php
@@ -111,74 +134,46 @@ assert($nTS->getTimestamp() === $c->resolve('nTS')->getTimestamp());
 assert($fTS->getTimestamp() !== $c->resolve('fTS')->getTimestamp());
 ```
 
-Cycle detection:
-
-```php
-// X depends on Y and Y depends on X ...
-class X { public function __construct(Y $y) {} }
-class Y { public function __construct(X $x) {} }
-
-$c = new Container();
-
-$c->add(X::class, function (): X {
-    return new X($this->resolve(Y::class));
-});
-$c->add(Y::class, function (): Y {
-    return new Y($this->resolve(X::class));
-});
-
-try {
-    $c->resolve(X::class);
-} catch (CycleDetected $e) {
-    // prints "Circular dependency detected: X -> Y -> X"
-    echo $e->getMessage();
-}
-```
-
 Dynamic loading:
 
 ```php
 interface Strategy {
-    public function run(): void;
+    public function run(): string;
 }
 class StrategyA implements Strategy {
-    public function run(): void {
-        echo "I'm A";
+    public function run(): string {
+        return 'A';
     }
 }
 class StrategyB implements Strategy {
-    public function run(): void {
-        echo "I'm B";
+    public function run(): string {
+        return 'B';
     }
 }
 
 $c = new Container();
 
-$c->add(StrategyA::class, function (): StrategyA {
-    return new StrategyA();
-});
-
-$c->add(StrategyB::class, function (): StrategyB {
-    return new StrategyB();
-});
-
-// This has to be a factory otherwise Strategy will be bound to whatever it first resolves to
-$c->factory(Strategy::class, function (string $strategy) use ($c): Strategy {
+// Note: This resolver has to be added via factory otherwise
+// "Strategy" will be bound to whatever it first resolves to
+$c->factory(Strategy::class, function (string $strategy): Strategy {
     switch ($strategy) {
         case 'A':
-            return $c->resolve(StrategyA::class);
+            return new StrategyA();
         case 'B':
-            return $c->resolve(StrategyB::class);
+            return new StrategyB();
         default:
             throw new RuntimeException(sprintf('No strategy found for %s', $strategy));
     }
 });
 
-echo $c->resolve(Strategy::class, 'A')->run(); // "I'm A"
-echo $c->resolve(Strategy::class, 'B')->run(); // "I'm B"
+assert('A' === $c->resolve(Strategy::class, 'A')->run());
+assert('B' === $c->resolve(Strategy::class, 'B')->run());
 
-// RuntimeException: No strategy found for C
-$c->resolve(Strategy::class, 'C')->run();
+try {
+    $c->resolve(Strategy::class, 'C')->run();
+} catch (RuntimeException $e) {
+    assert('No strategy found for C' === $e->getMessage());
+}
 ```
 
 ## How it works
@@ -189,7 +184,7 @@ Resolvers are bound to the container which means that `$this` points to the cont
 
 Resolving means executing the resolver function to instantiate a class. This process is recursive as classes may have other classes as dependencies. If the container encounters a cycle while traversing the dependency graph it stops the resolution process. This ensures that only acyclic dependency graphs (ie. DAGs) are handled.
 
-The container caches instantiates by default meaning that any subsequent resolution will return the same instance. If a resolver was added via the `factory()` method then every resolution will return a new instance.
+The container caches instantiates by default meaning that any subsequent resolution will return the same instance. If a resolver was added via the `factory()` method then every resolution will return a new instance. This and the fact that you can pass arbitrary parameters down to resolvers means that it's easy to implement dynamic loading.
 
 ## Tests
 

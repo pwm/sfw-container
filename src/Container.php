@@ -64,7 +64,7 @@ class Container
 
         if (isset($traversedPathStack[$key])) {
             $cycle = array_merge(array_keys($traversedPathStack), [$key]);
-            throw new CycleDetected(sprintf('Circular dependency detected: %s', implode(' -> ', $cycle)));
+            throw new CycleDetected(implode(' -> ', $cycle));
         }
 
         $traversedPathStack[$key] = self::TRAVERSED;
