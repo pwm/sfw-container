@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2018-10-12
+
+### Added
+  * The container is passed into resolvers as their first parameter. This removes the need for resolvers closing over the container or binding `$this` to the container in resolvers.
+
+### Removed
+  * Binding `$this` in resolvers to the container.
+
 ## [2.1.0] - 2018-10-03
 
 ### Added

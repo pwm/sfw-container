@@ -41,32 +41,31 @@ PHP 7.1+
 Basic usage:
 
 ```php
-// Some classes with dependencies
-class A { public function __construct(B $b, C $c) {} }
-class B { public function __construct(int $x) {} }
-class C { public function __construct(string $s) {} }
+// Have some classes, some of them depend on others
+class A { public function __construct(int $x) {} }
+class B { public function __construct(string $s) {} }
+class C { public function __construct(A $a, B $b) {} }
 
 // Create a container
 $c = new Container();
 
-// Add dependencies to the container
-// Resolving from within resolvers is easy as $this is bound to the resolver as seen below
-// Alternatively you can also do closure style "use ($c)", "$c->resolve(...)"
+// Add resolver functions to the container that will instantiate your classes
 $c->add(A::class, function (): A {
-    return new A(
-        $this->resolve(B::class),
-        $this->resolve(C::class)
-    );
+    return new A(1);
 });
-// 
 $c->add(B::class, function (): B {
-    return new B(1234);
-});
-$c->add(C::class, function (): C {
-    return new C('foobar');
+    return new B('x');
 });
 
-// Resolve them
+// Resolving from within resolvers is easy as the Container is passed to the functions as the 1st parameter
+$c->add(C::class, function (Container $c): C {
+    return new C(
+        $c->resolve(A::class),
+        $c->resolve(B::class)
+    );
+});
+
+// Resolve your classes
 assert($c->resolve(A::class) instanceof A);
 assert($c->resolve(B::class) instanceof B);
 assert($c->resolve(C::class) instanceof C);
@@ -81,11 +80,11 @@ class Y { public function __construct(X $x) {} }
 
 $c = new Container();
 
-$c->add(X::class, function (): X {
-    return new X($this->resolve(Y::class));
+$c->add(X::class, function (Container $c): X {
+    return new X($c->resolve(Y::class));
 });
-$c->add(Y::class, function (): Y {
-    return new Y($this->resolve(X::class));
+$c->add(Y::class, function (Container $c): Y {
+    return new Y($c->resolve(X::class));
 });
 
 try {
@@ -155,7 +154,7 @@ $c = new Container();
 
 // Note: This resolver has to be added via factory otherwise
 // "Strategy" will be bound to whatever it first resolves to
-$c->factory(Strategy::class, function (string $strategy): Strategy {
+$c->factory(Strategy::class, function (Container $c, string $strategy): Strategy {
     switch ($strategy) {
         case 'A':
             return new StrategyA();
@@ -178,13 +177,15 @@ try {
 
 ## How it works
 
-Adding an instance to the container requires a key that is unique and a resolver function that, upon execution, returns the instance.
+A container is just a map where keys are ids of classes (it's good practice to use their full names including namepsace) and values are functions, called resolvers. Resolvers know how to instantiate their classes. Resolving a class means executing its resolver.
 
-Resolvers are bound to the container which means that `$this` points to the container from within. This makes it possible to resolve inside resolvers using `$this->resolve()`.
+Resolvers get the container itself as their first argument which makes it easy to resolve from within a resolver, making the process recursive. This is very useful as classes may have other classes as dependencies.
 
-Resolving means executing the resolver function to instantiate a class. This process is recursive as classes may have other classes as dependencies. If the container encounters a cycle while traversing the dependency graph it stops the resolution process. This ensures that only acyclic dependency graphs (ie. DAGs) are handled.
+You are free to build any dependency graph you like. However, the resolution process stops when it encounters a cycle while traversing it. This ensures that only acyclic graphs (ie. DAGs) are handled. It also saves us from blowing our callstack, but that's not that important in PHP.
 
-The container caches instantiates by default meaning that any subsequent resolution will return the same instance. If a resolver was added via the `factory()` method then every resolution will return a new instance. This and the fact that you can pass arbitrary parameters down to resolvers means that it's easy to implement dynamic loading.
+The container caches instantiates by default meaning that any subsequent resolution will return the same instance. This is good and usually what we want. However, if a resolver was added via the `factory()` method then every resolution will return a new instance.
+
+You can also pass extra parameters to resolvers. This, combined with `factory()`, makes it possible to implement dynamic loading, ie. to instantiate an interface in various different ways. An example of this would be what is known as the Strategy pattern, ie. using runtime information, eg. a user supplied CLI parameter, to instantiate the approppriate class.
 
 ## Tests
 

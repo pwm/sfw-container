@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace SFW\Container;
 
+use Closure;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -35,26 +36,15 @@ class ContainerTest extends TestCase
     {
         $c = new Container();
 
-        $instanceCounter = function () {
-            static $count = 0;
-            return new class(++$count)
-            {
-                private $count;
-                public function __construct(int $count) { $this->count = $count; }
-                public function getCount(): int { return $this->count; }
-            };
+        $sayRandomString = function (): string {
+            return base64_encode(random_bytes(16));
         };
 
-        $c->add('cached', $instanceCounter);
-        $c->factory('newEveryTime', $instanceCounter);
+        $c->add('cached', $sayRandomString);
+        $c->factory('newEveryTime', $sayRandomString);
 
-        self::assertSame(1, $c->resolve('cached')->getCount());
-        self::assertSame(1, $c->resolve('cached')->getCount());
-        self::assertSame(1, $c->resolve('cached')->getCount());
-
-        self::assertSame(1, $c->resolve('newEveryTime')->getCount());
-        self::assertSame(2, $c->resolve('newEveryTime')->getCount());
-        self::assertSame(3, $c->resolve('newEveryTime')->getCount());
+        self::assertSame($c->resolve('cached'), $c->resolve('cached'));
+        self::assertNotSame($c->resolve('newEveryTime'), $c->resolve('newEveryTime'));
     }
 
     /**
@@ -73,7 +63,7 @@ class ContainerTest extends TestCase
         });
 
         // Note that this has to be a factory otherwise Strategy will be bound to whatever it 1st resolves to
-        $c->factory(Strategy::class, function (string $strategy) use ($c): Strategy {
+        $c->factory(Strategy::class, function (Container $c, string $strategy): Strategy {
             switch ($strategy) {
                 case 'A':
                     return $c->resolve(StrategyA::class);

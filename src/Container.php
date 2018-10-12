@@ -37,7 +37,7 @@ class Container
             throw new DuplicateKey(sprintf('Cannot override resolver for key: %s', $key));
         }
         // Bind the resolver to the container instance so we can use $this->resolve() from within it
-        $this->resolvers[$key] = $resolver->bindTo($this);
+        $this->resolvers[$key] = $resolver;
     }
 
     public function resolve(string $key, ...$resolverParams)
@@ -68,7 +68,7 @@ class Container
         }
 
         $traversedPathStack[$key] = self::TRAVERSED;
-        $resolved = $this->resolvers[$key](...$resolverParams);
+        $resolved = $this->resolvers[$key]($this, ...$resolverParams);
         array_pop($traversedPathStack);
 
         return $resolved;
