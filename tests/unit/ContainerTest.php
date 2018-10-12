@@ -34,16 +34,23 @@ class ContainerTest extends TestCase
      */
     public function it_can_instantiate_via_a_factory(): void
     {
-        $c = new Container();
-
-        $sayRandomString = function (): string {
-            return base64_encode(random_bytes(16));
+        $object = new class
+        {
+            public $value = 0;
         };
 
-        $c->add('cached', $sayRandomString);
-        $c->factory('newEveryTime', $sayRandomString);
+        $objectClosure = (function ($object): Closure {
+            return function () use ($object): int {
+                return $object->value++;
+            };
+        })($object);
 
+        $c = new Container();
+
+        $c->add('cached', $objectClosure);
         self::assertSame($c->resolve('cached'), $c->resolve('cached'));
+
+        $c->factory('newEveryTime', $objectClosure);
         self::assertNotSame($c->resolve('newEveryTime'), $c->resolve('newEveryTime'));
     }
 
