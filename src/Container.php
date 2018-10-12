@@ -18,12 +18,12 @@ class Container
     /** @var Closure[] */
     private $resolvers = [];
     /** @var array */
-    private $cacheMe = [];
-    /** @var array */
     private $cache = [];
+    /** @var bool[] */
+    private $cacheMe = [];
 
-    private const TRAVERSED = true;
     private const CACHE_ME  = true;
+    private const TRAVERSED = true;
 
     public function add(string $key, Closure $resolver): void
     {
@@ -36,7 +36,6 @@ class Container
         if (isset($this->resolvers[$key])) {
             throw new DuplicateKey(sprintf('Cannot override resolver for key: %s', $key));
         }
-        // Bind the resolver to the container instance so we can use $this->resolve() from within it
         $this->resolvers[$key] = $resolver;
     }
 
@@ -59,7 +58,8 @@ class Container
 
     private function _resolve(string $key, ...$resolverParams)
     {
-        // Keeping track of our path in the dependency graph during recursive calls, so we can detect cycles
+        // We use a stack to keep track of the path traversed in the graph so we can detect cycles
+        // We utilise static as an easy and convenient way to keep state during recursion
         static $traversedPathStack = [];
 
         if (isset($traversedPathStack[$key])) {
